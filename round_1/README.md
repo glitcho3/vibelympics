@@ -1,33 +1,92 @@
-# Challenge 1: App with Emoji-Only UI
+<!--
+EmojiFlics 🎬💀🍹
+A fully containerized movie streaming playground where everything is emojis. No text in the interface.
+Built entirely with Chainguard images for minimal, secure containers.
+-->
 
-<img src="../assets/emojis.png" width="700" alt="Emojis">
+# EmojiFlics 🎬💀🍹
 
-## Themes
-- Build with Chainguard Containers
-- Get weird
+<!-- ====================== -->
+<!-- 🚀 Setup Instructions -->
+<!-- ====================== -->
 
-## The Challenge
-Build a fully functional application where the entire user interface uses ONLY emojis. No text allowed in any interactive elements - buttons, navigation, labels, everything must be emojis. Extra points if, like, everything is emojis.
+1. **Build all containers**:
 
-## Requirements
-- All UI elements must be emojis only (no text in the interface)
-- Ideally the app will actually do something
-- Must be containerized using Chainguard Containers. You can set it up with a Dockerfile and we'll build and run locally. If it's a web app, it should able to be run on some port and be seen locally. If it's a CLI app, we'll run the default entrypoint and go from there. Feel free to give us directions in the README (replace this file).
+```bash
+# Builds and starts all services
+docker-compose up -d --build
+```
 
-## Dumb Ideas
+<!-- ====================== -->
+<!-- 🧩 Architecture Overview -->
+<!-- ====================== -->
 
-Stuck? Here are some derivative ideas!
+We have four main services, each in its own container:
 
-- Calculator (🔢 ➕ ➖ ✖️ ➗)
-- To Do app (✅ ❌ 📝 🗑️)
-- Weather app (☀️ 🌧️ ❄️ 🌡️)
-- Music player (▶️ ⏸️ ⏭️ 🔀 🔁)
-- Mini game (🎮)
-- Demonic energy detector (😈)
-- Beanie baby collection database / sorter (🐢🧸, topical!)
+| Service  | Port | Role |
+|--------- |------|------|
+| inbound  | 9001 | Accepts movie content and forwards to gawk |
+| gawk     | 9002 | Applies emoji filters, replaces shortcodes using AWK scripts |
+| pandoc   | 9003 | Converts Markdown to HTML in `/output/index.html` |
+| outbound | 8080 | Serves the final HTML to browser or curl |
 
-## Submission
-To submit, simply replace the contents of this folder (round_1) with the code for your project. Make sure to replace this README.md with instructions on getting your project running. Also make sure your vibelympics repository is public and that you've pushed all the code you want us to see. We will pull in your submission directly from your repository.
+**Why these components?**
 
-## Deadline
-December 4, 11:59 PM EST
+- **Chainguard images:** Minimal, secure, and reproducible containers.
+- **Multi-stage builds:** Used for pandoc and Python to separate build tools from runtime, keeping runtime images tiny and safe.
+- **gawk:** Efficiently replaces emoji shortcodes like `:mage_man:` → `🧙‍♂️` and filters input.
+- **pandoc:** Converts Markdown content into HTML, preserving emojis and formatting.
+- **outbound:** Pure Python server that serves `/output` safely, no shell required.
+
+<!-- ====================== -->
+<!-- 🎬 Send Movie Content -->
+<!-- ====================== -->
+
+Use the helper script to play a movie (e.g., YouTube):
+
+```bash
+# Example: play a YouTube link
+./play yt <YOUTUBE_URL>
+```
+
+Content flows: `inbound → gawk → pandoc → outbound`.
+
+<!-- ====================== -->
+<!-- 🌐 View Processed Movies -->
+<!-- ====================== -->
+
+- **Browser:**  
+  Open [http://localhost:8080](http://localhost:8080)
+
+- **CLI / curl:**  
+
+```bash
+curl http://localhost:8080
+```
+
+You should see only emojis, for example:
+
+```
+💀 🚢 🍹
+🧙‍♂️ 💍 🔥
+```
+
+<!-- ====================== -->
+<!-- ✅ Recommended Order -->
+<!-- ====================== -->
+
+1. `docker-compose up -d --build`  
+2. `./play yt <URL>`  
+3. View with `curl` or browser.
+
+<!-- ====================== -->
+<!-- Optional Notes -->
+<!-- ====================== -->
+
+- Outbound container is pure Python, does not need shell or root permissions.
+- Pandoc uses a multi-stage build to keep the runtime minimal.
+- gawk scripts handle emoji translation and filtering efficiently.
+- Volumes are shared for `/output` so that pandoc writes and outbound reads the HTML.
+- No text is used in UI, everything is emojis.
+- Safe to test locally using Docker Compose.
+

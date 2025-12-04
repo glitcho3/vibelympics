@@ -1,0 +1,42 @@
+services:
+  inbound:
+    build: ./inbound
+    depends_on:
+      - gawk
+    ports:
+      - "9001:9001"
+    networks:
+      - internal
+
+  gawk:
+    build: ./gawk
+    depends_on:
+      - pandoc
+    networks:
+      - internal
+
+  pandoc:
+    build: ./pandoc
+    depends_on:
+      - outbound
+    volumes:
+      - shared:/output
+    networks:
+      - internal
+
+  outbound:
+    build: ./outbound
+    ports:
+      - "8080:8080"
+    volumes:
+      - shared:/output
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  shared:
+
