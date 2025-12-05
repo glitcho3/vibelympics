@@ -69,14 +69,3 @@ You should see only emojis, for example:
 🧙‍♂️ 💍 🔥
 ```
 
-<!-- ====================== -->
-<!-- Optional Notes -->
-<!-- ====================== -->
-
-- Outbound container is pure Python, does not need shell or root permissions.
-- Pandoc uses a multi-stage build to keep the runtime minimal.
-- gawk scripts handle emoji translation and filtering efficiently.
-- Volumes are shared for `/output` so that pandoc writes and outbound reads the HTML.
-- No text is used in UI, everything is emojis.
-- Safe to test locally using Docker Compose.
-
