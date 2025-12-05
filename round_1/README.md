@@ -42,14 +42,12 @@ We have four main services, each in its own container:
 <!-- 🎬 Send Movie Content -->
 <!-- ====================== -->
 
-Use the helper script to play a movie (e.g., YouTube):
+Use the helper script to star the game:
 
 ```bash
-# Example: play a YouTube link
-./play yt <YOUTUBE_URL>
+chmod +x play.sh
+./play.sh
 ```
-
-Content flows: `inbound → gawk → pandoc → outbound`.
 
 <!-- ====================== -->
 <!-- 🌐 View Processed Movies -->
@@ -70,14 +68,6 @@ You should see only emojis, for example:
 💀 🚢 🍹
 🧙‍♂️ 💍 🔥
 ```
-
-<!-- ====================== -->
-<!-- ✅ Recommended Order -->
-<!-- ====================== -->
-
-1. `docker-compose up -d --build`  
-2. `./play yt <URL>`  
-3. View with `curl` or browser.
 
 <!-- ====================== -->
 <!-- Optional Notes -->
