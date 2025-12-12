@@ -96,7 +96,7 @@ This project uses **Docker Buildx** for building images. Buildx enables advanced
 
 ```bash
 docker buildx build --load -t helm-auditor:latest .
-
+```
 
 ### 2. Load image into Minikube
 ```bash
