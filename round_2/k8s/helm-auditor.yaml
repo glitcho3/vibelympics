@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: helm-auditor
+spec:
+  restartPolicy: Never
+
+  initContainers:
+    
+    ## DEV dummy chart
+    #- name: dummy
+    #  image: cgr.dev/chainguard/helm:latest
+    #  command: ["helm"]
+    #  args:
+    #    ["create", "/charts/dummy"]
+    #  volumeMounts:
+    #    - name: helm-config
+    #      mountPath: /helm-config
+    #    - name: charts
+    #      mountPath: /charts
+    
+    # Pull y preparar chart
+    - name: fetcher
+      image: cgr.dev/chainguard/helm:latest
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      command:
+        - helm
+        - pull
+        - "$(PROM_REPO)$(PROM_CHART)"
+        - "--version"
+        - "$(PROM_VERSION)"
+        - "--untar"
+        - "-d"
+        - "/charts"
+      volumeMounts:
+        - name: helm-config
+          mountPath: /helm-config
+        - name: charts
+          mountPath: /charts
+
+    # Template chart
+    - name: template
+      image: cgr.dev/chainguard/helm:latest
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      command: ["helm"]
+      args:
+        ["template", "/charts/$(PROM_CHART)", "--output-dir", "templates"]
+      volumeMounts:
+        - name: helm-config
+          mountPath: /helm-config
+        - name: charts
+          mountPath: /charts
+        - name: templates
+          mountPath: /templates
+
+    # Trivy config scan
+    - name: trivy
+      image: aquasec/trivy:0.68.1
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      command: ["trivy"]
+      args: ["config", "-q", "-f", "json", "-o", "/reports/$(PROM_CHART).report.trivy.json", "/templates"]
+      volumeMounts:
+        - name: templates
+          mountPath: /templates
+        - name: reports
+          mountPath: /reports
+          
+    # get images from trivy output
+    - name: runner
+      image: helm-auditor:latest
+      command: ["/auditor-runner"]
+      imagePullPolicy: IfNotPresent
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      volumeMounts:
+        - name: templates
+          mountPath: /templates
+        - name: reports
+          mountPath: /reports
+        - name: results
+          mountPath: /results
+
+
+    - name: aggregator
+      image: helm-auditor:latest
+      command: ["/runner-aggregator"]
+      imagePullPolicy: IfNotPresent
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      volumeMounts:
+        - name: reports
+          mountPath: /reports
+        - name: results
+          mountPath: /results
+
+    # # Auditor Provenance worker 
+    # - name: provenor
+    #   image: helm-auditor:latest
+    #   command: ["/auditor-provenor"]
+    #   imagePullPolicy: IfNotPresent
+    #   envFrom:
+    #     - configMapRef:
+    #         name: auditor-config
+    #   volumeMounts:
+    #     - name: reports
+    #       mountPath: /reports
+    #     - name: results
+    #       mountPath: /results
+
+  containers:
+    
+          
+    - name: auditor
+      image: helm-auditor:latest
+      command: ["/helm-auditor", "/templates/", "/results"]
+      imagePullPolicy: IfNotPresent
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      volumeMounts:
+        - name: templates
+          mountPath: /templates
+        - name: reports
+          mountPath: /reports
+        - name: results
+          mountPath: /results
+
+    - name: reporter
+      image: helm-auditor:latest
+      command: ["/auditor-reporter"]
+      imagePullPolicy: IfNotPresent
+      envFrom:
+        - configMapRef:
+            name: auditor-config
+      volumeMounts:
+        - name: reports
+          mountPath: /reports
+
+
+    # DEV: debug/inspection
+    - name: busybox
+      image: cgr.dev/chainguard/busybox:latest
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Busybox ready for inspection..."
+          sleep infinity
+      volumeMounts:
+        - name: charts
+          mountPath: /charts
+        - name: templates
+          mountPath: /templates
+        - name: reports
+          mountPath: /reports
+        - name: results
+          mountPath: /results
+
+  serviceAccountName: trivy-aggregator
+
+  volumes:
+    - name: helm-config
+      emptyDir: {}
+    - name: charts
+      emptyDir: {}
+    - name: templates
+      emptyDir: {}
+    - name: reports
+      persistentVolumeClaim:
+        claimName: reports-pvc
+    - name: results
+      emptyDir: {}

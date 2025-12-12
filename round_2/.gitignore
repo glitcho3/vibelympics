@@ -1,0 +1,57 @@
+# Go
+/bin/
+/pkg/
+/*.exe
+/*.exe~
+/*.dll
+/*.so
+/*.dylib
+/go.sum
+
+# Go build cache
+*.test
+*.out
+*.prof
+*.cover
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~.nib
+*.bak
+*.tmp
+
+# Docker
+*.tar
+*.log
+.build-cache/
+docker-compose.override.yml
+
+# Kubernetes / Minikube / Helm
+.kube/
+minikube/
+*.yaml~
+*.local
+reports-local/
+charts/
+k8s/*.yaml~ 
+
+# Logs
+*.log
+*.tmp
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.zip
+*.tar.gz
+

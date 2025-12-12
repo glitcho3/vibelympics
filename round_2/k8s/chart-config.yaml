@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auditor-config
+data:
+#  PROM_CHART: nginx
+#  PROM_REPO: oci://registry-1.docker.io/bitnamicharts/
+#  PROM_VERSION: 22.3.8
+#  OUTPUT_FOLDER: "/reports/nginx/"
+   PROM_CHART: kube-prometheus-stack
+   PROM_REPO: oci://ghcr.io/prometheus-community/charts/
+   PROM_VERSION: 80.0.0
+   OUTPUT_FOLDER: "/reports/kube-prometheus-stack/"
+
+
+
